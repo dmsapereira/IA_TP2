@@ -1,12 +1,30 @@
 import distanceMatrix as helper
 import random
+from math import exp
 
-NITER = 1000
+N_ITER = 1000
+matrix = helper.readDistanceMatrix("distancias.txt")
+
+class Solution:
+    def __init__(self):
+        self.path = []
+        self.cost = 0
+
+    def addCity(self, city):
+        if self.path:
+            self.cost += helper.distance(matrix, self.path[-1], city)
+        self.path.append(city)
+    
 
 
-def getInitialTemp(matrix):
-    maxDistance = matrix[1][0]
-    minDistance = matrix[1][0]
+
+
+def getInitialTemp():
+    maxDistance1 = int(matrix[1][0][0])
+    minDistance1 = int(matrix[1][0][0])
+    maxDistance2 = int(matrix[1][0][0])
+    minDistance2 = int(matrix[1][0][0])
+
     current = 0
     cities = matrix[0]
 
@@ -16,51 +34,88 @@ def getInitialTemp(matrix):
                 continue
             else:
                 current = helper.distance(matrix, city1,  city2)
-                if current > maxDistance:
-                    maxDistance = current
-                elif current < minDistance:
-                    minDistance = current
+                if current > maxDistance2:
+                    if current > maxDistance1:
+                        maxDistance2 = maxDistance1
+                        maxDistance1 = current
+                    else:
+                        maxDistance2 = current 
+                
+                elif current < minDistance2:
+                    if current < minDistance1:
+                        minDistance2 = minDistance1
+                        minDistance1 = current
+                    else:
+                        minDistance2 = current
 
-    return maxDistance - minDistance
+    return maxDistance1 + maxDistance2 - minDistance1 - minDistance2
 
-def create_initial_solution(cities, iterations):
-    path = []
+def getProb(d, temp):
+    threshold = exp(-d/temp)
+    roll = random.random()
+    return roll <= threshold
 
-    for i in  range(iterations):
+def create_initial_solution(n):
+    path = Solution()
+    cities = list(matrix[0])
+
+    for i in range(n):
         current = random.choice(cities)
         cities.remove(current)
-        path.append(current)
-    
+        path.addCity(current)
+
     return path
 
-def neighbor(path):
-    i = random.randint(1, len(path) - 2)
+
+def neighbor(solution):
+    path = solution.path
+
+    i = random.randint(1, len(path) - 4)
     j = random.randint(1, len(path) - 2)
 
-    if(i >= j):
-        return neighbor(path)
-    else:
-        path1 = path[0:i + 1]
-        print(path1)
-        path2 = path[i + 1: j + 1]
-        path2.reverse()
-        print(path2) 
-        path3 = path[j + 1:]
-        print(path3)
-        path1.extend(path2)
-        path1.extend(path3)
+    while(i >= j or i + 1 == j):
+        i = random.randint(1, len(path) - 4)
+        j = random.randint(1, len(path) - 2)
 
-    return path1
+    path1 = path[0:i + 1]
+    path2 = path[i + 1: j + 1]
+    path2.reverse()
+    path3 = path[j + 1:]
+    path1.extend(path2)
+    path1.extend(path3)
 
-    
+    result = Solution()
+    for city in path1:
+        result.addCity(city)
 
+    return result
 
 
 def solve():
-    matrix = helper.readDistanceMatrix("distancias.txt")
-    current = create_initial_solution(matrix, len(matrix[0]))
+    current = create_initial_solution(len(matrix[0]))
     best = current
     next = 0
     temp = getInitialTemp(matrix)
 
-    #for iteration in range(0, NITER):
+    while(True):
+        for iteration in range(N_ITER):
+            next = neighbor(current) 
+            d = next.cost - current.cost
+            if d < 0:
+                current = next
+                if current.cost < best.cost:
+                    best = current
+            else:
+                if getProb(d, temp):
+                    current = next
+            
+
+    
+
+"""current = create_initial_solution(len(matrix[0]))
+print(getInitialTemp())
+print(current.cost)
+print(neighbor(current).cost)"""
+
+
+
