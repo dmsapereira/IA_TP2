@@ -1,6 +1,12 @@
 import distanceMatrix as helper
 import random
+import time
 from math import exp
+
+# minimal proportion of accepted neighbours to change temperature
+ACCEPT_NEIGHBOR_THRESHOLD = 0.1 
+ACCEPTANCE_THRESHOLD = 0.01
+TEMP_MULTIPLIER = 0.9
 
 matrix = helper.readDistanceMatrix("distancias.txt")
 
@@ -13,6 +19,9 @@ class Solution:
         if self.path:
             self.cost += helper.distance(matrix, self.path[-1], city)
         self.path.append(city)
+
+    def finishPath(self):
+        self.cost += helper.distance(matrix, self.path[-1], self.path[0])
     
 
 
@@ -63,7 +72,7 @@ def create_initial_solution(n):
         cities.remove(current)
         solution.addCity(current)
     
-    solution.cost += helper.distance(matrix, solution.path[-1], solution.path[0])
+    solution.finishPath()
 
     return solution
 
@@ -89,53 +98,60 @@ def neighbor(solution):
     for city in path1:
         result.addCity(city)
 
+    result.finishPath()
+
     return result
 
-def timetoStop():
-    #TODO
-    return 0
+def timetoStop(n_iter, accepted_neighbors):
+    return accepted_neighbors/n_iter < ACCEPTANCE_THRESHOLD
 
-def var_n_iter(current_n_iter):
-    #TODO
-    return 0
+def should_change_temp(current_n_iter, accepted_neighbors):
+    n_accepted_neighbors = current_n_iter * ACCEPT_NEIGHBOR_THRESHOLD
+    print("Minimum neighbors : " + str(n_accepted_neighbors) + ". Current accepted : " + str(accepted_neighbors))
+    return  accepted_neighbors >= n_accepted_neighbors
 
 def decay_temp(temp):
-    #TODO    
-    return 0
+    return temp * TEMP_MULTIPLIER
 
 
 def solve():
-    #TODO
-    n_iter = 1000
+    n_iter = 10000
     current = create_initial_solution(len(matrix[0]))
     best = current
     next = 0
-    temp = getInitialTemp(matrix)
+    temp = getInitialTemp()
+    startTime = int(round(time.time() * 1000))
 
     while(True):
+        accepted_neighbors = 0
         for iteration in range(n_iter):
             next = neighbor(current) 
             d = next.cost - current.cost
             if d < 0:
                 current = next
+                accepted_neighbors += 1
                 if current.cost < best.cost:
                     best = current
             else:
                 if getProb(d, temp):
+                    accepted_neighbors +=1
                     current = next
-        if timetoStop() :
+
+            if(should_change_temp(n_iter, accepted_neighbors)):
+                break
+        if timetoStop(n_iter, accepted_neighbors) :
+            print("Time Elapsed : " + str(int(round(time.time() * 1000)) - startTime) + "ms")
             return best 
 
-        n_iter = var_n_iter(n_iter)
         temp = decay_temp(temp)
+
+
             
 
     
 
-"""current = create_initial_solution(len(matrix[0]))
-print(getInitialTemp())
-print(current.cost)
-print(neighbor(current).cost)"""
-
+solution = solve()
+print(solution.path)
+print(solution.cost)
 
 
