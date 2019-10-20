@@ -2,7 +2,6 @@ import distanceMatrix as helper
 import random
 from math import exp
 
-N_ITER = 1000
 matrix = helper.readDistanceMatrix("distancias.txt")
 
 class Solution:
@@ -56,15 +55,17 @@ def getProb(d, temp):
     return roll <= threshold
 
 def create_initial_solution(n):
-    path = Solution()
+    solution = Solution()
     cities = list(matrix[0])
 
     for i in range(n):
         current = random.choice(cities)
         cities.remove(current)
-        path.addCity(current)
+        solution.addCity(current)
+    
+    solution.cost += helper.distance(matrix, solution.path[-1], solution.path[0])
 
-    return path
+    return solution
 
 
 def neighbor(solution):
@@ -90,15 +91,29 @@ def neighbor(solution):
 
     return result
 
+def timetoStop():
+    #TODO
+    return 0
+
+def var_n_iter(current_n_iter):
+    #TODO
+    return 0
+
+def decay_temp(temp):
+    #TODO    
+    return 0
+
 
 def solve():
+    #TODO
+    n_iter = 1000
     current = create_initial_solution(len(matrix[0]))
     best = current
     next = 0
     temp = getInitialTemp(matrix)
 
     while(True):
-        for iteration in range(N_ITER):
+        for iteration in range(n_iter):
             next = neighbor(current) 
             d = next.cost - current.cost
             if d < 0:
@@ -108,6 +123,11 @@ def solve():
             else:
                 if getProb(d, temp):
                     current = next
+        if timetoStop() :
+            return best 
+
+        n_iter = var_n_iter(n_iter)
+        temp = decay_temp(temp)
             
 
     
