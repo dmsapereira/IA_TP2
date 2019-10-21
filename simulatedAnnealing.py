@@ -73,11 +73,26 @@ def getProb(d, temp):
     roll = random.random()
     return roll <= threshold
 
-def create_initial_solution(n):
+def create_initial_solution():
     solution = Solution()
     cities = list(matrix[0])
 
     for i in range(n):
+        current = random.choice(cities)
+        cities.remove(current)
+        solution.addCity(current)
+    
+    solution.finishPath()
+
+    return solution
+
+def create_initial_solution(starting_city):
+    solution = Solution()
+    cities = list(matrix[0])
+    solution.addCity(starting_city)
+    cities.remove(starting_city)
+
+    for i in range(len(matrix[0]) - 1):
         current = random.choice(cities)
         cities.remove(current)
         solution.addCity(current)
@@ -141,6 +156,8 @@ def change_n_iter(n_iter, mode):
 
 def solve():
 
+    starting_city = input("Starting city (NO | <NAME> ): ").strip()
+
     temp = input("Initial Temp (AUTO | <value>) :").strip()
     if temp == "AUTO":
         temp = getInitialTemp()
@@ -154,7 +171,9 @@ def solve():
     temp_mode = "GEO"
 
     n_iter = 10000
-    first = create_initial_solution(len(matrix[0]))
+    
+    first = create_initial_solution() if starting_city == "NO" else create_initial_solution(starting_city)
+
     current = first
     best = current
     worst = current
